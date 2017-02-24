@@ -26,9 +26,8 @@ export class IllegalMoveError extends Error {
 
 // Error to throw if a player tries to play out of turn.
 export class OutOfTurnError extends Error {
-  constructor(move: any, player: number, reason: string) {
-    let message: string =
-        `Out of turn play by player ${player}: ${reason}\n${JSON.stringify(move)}`;
+  constructor(player: number, reason: string) {
+    let message: string = `Out of turn play by player ${player}: ${reason}`;
     super(message);
   }
 }

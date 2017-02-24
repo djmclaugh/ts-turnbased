@@ -44,7 +44,7 @@ export interface SimpleTurnEvents {
   lastPrivateRolls: Array<number>;
 };
 
-function nullOrSlice(array: Array<any>):Array<any> {
+function nullOrSlice(array: Array<any>): Array<any> {
   return array ? array.slice() : null;
 }
 
@@ -131,10 +131,11 @@ export class SimpleGame extends Game<SimpleOptions, SimpleMove, SimpleTurnEvents
     if (move.guess != "even" && move.guess != "odd") {
       throw new InvalidMoveError(move, "move does not contain an even/odd guess");
     }
-    return {
-      guess: move.guess,
-      gamble: move.gamble == true
-    };
+    let actualMove: SimpleMove = { guess: move.guess };
+    if (move.gamble) {
+      actualMove.gamble = true;
+    }
+    return actualMove;
   }
 
   // If the move is well formed and the player is not playing out of turn, the only reason a move
@@ -196,7 +197,7 @@ export class SimpleGame extends Game<SimpleOptions, SimpleMove, SimpleTurnEvents
       if (value >= this.options.numPoints) {
         winners.add(index);
       }
-    })
+    });
     return winners;
   }
 
@@ -253,6 +254,6 @@ export class SimpleGame extends Game<SimpleOptions, SimpleMove, SimpleTurnEvents
   // Do not use outside of tests.
   private getNextDiceRoll(): number{
     this.rollGenerator = (this.rollGenerator * 8191) % 127;
-    return this.rollGenerator % 6;
+    return 1 + (this.rollGenerator % 6);
   }
 }

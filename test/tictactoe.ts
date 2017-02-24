@@ -42,7 +42,7 @@ export class Tictactoe extends AbstractStrategyGame<any, number> {
     return null;
   }
 
-  // Moves but be numbers from 0 to 8.
+  // Moves must be numbers from 0 to 8.
   // Numbers that are not whole numbers will be accepted anyway for simplicity's sake (but they will
   // be floored). 
   protected sanitizeMove(move: any): number {
@@ -71,7 +71,6 @@ export class Tictactoe extends AbstractStrategyGame<any, number> {
   }
 
   // A player wins if their board contains one of the win patterns.
-  // It's impossible for two players to win simultanuously, so checking one after the other is fine.
   protected getStatus(): Status {
     for (let win of Tictactoe.wins) {
       if ((win & this.xBoard) == win) {

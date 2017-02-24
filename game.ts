@@ -27,11 +27,11 @@ export abstract class Game<O, M, E> {
     // Assert that the player can play a move this turn.
     let playersToPlayThisTurn: Set<Player> = this.getPlayersToPlay();
     if (playersToPlayThisTurn.size == 0) {
-      throw new OutOfTurnError(move, player, "The game is already over");
+      throw new OutOfTurnError(player, "The game is already over");
     } else if (!playersToPlayThisTurn.has(player)) {
-      throw new OutOfTurnError(move, player, "No legal moves this turn for this player");
+      throw new OutOfTurnError(player, "No legal moves this turn for this player");
     } else if (this.pendingMoves.has(player)) {
-      throw new OutOfTurnError(move, player, "Player has already played this turn");
+      throw new OutOfTurnError(player, "Player has already played this turn");
     }
     // Assert that the move is well formed.
     let sanitizedMove: M = this.sanitizeMove(move);
