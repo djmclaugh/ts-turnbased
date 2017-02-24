@@ -1,0 +1,27 @@
+{
+  "name": "ts-turnbased",
+  "version": "0.0.1",
+  "description": "Abstract class for turned based board games written in TypeScript.",
+  "scripts": {
+    "pretest": "tsc",
+    "test": "mocha --recursive ./test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/djmclaugh/ts-turnbased.git"
+  },
+  "author": "David McLaughlin",
+  "license": "Unlicense",
+  "bugs": {
+    "url": "https://github.com/djmclaugh/ts-turnbased/issues"
+  },
+  "homepage": "https://github.com/djmclaugh/ts-turnbased#readme",
+  "dependencies": {},
+  "devDependencies": {
+    "@types/chai": "^3.4.35",
+    "@types/mocha": "^2.2.39",
+    "chai": "^3.5.0",
+    "mocha": "^3.2.0",
+    "typescript": "^2.1.6"
+  }
+}
