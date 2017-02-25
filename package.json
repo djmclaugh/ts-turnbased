@@ -2,6 +2,8 @@
   "name": "ts-turnbased",
   "version": "0.0.1",
   "description": "Abstract class for turned based board games written in TypeScript.",
+  "main": "index.js",
+  "typings": "index.ts",
   "scripts": {
     "pretest": "tsc",
     "test": "mocha --recursive ./test"
