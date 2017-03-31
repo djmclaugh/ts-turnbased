@@ -21,8 +21,8 @@ export abstract class Game<O, M, E> {
   // Process input from the specified player.
   // This method does not need to be overriden by subclasses.
   // In fact, if you find yourself wanting to override this method, either there is an issue with
-  // how the game class was designed (in which case, please contact me), you are not overriding the
-  // sanitize*/assertMoveIsLegal/processTurn properly.
+  // how the this abstract game class was designed (in which case, please contact me) or you are not
+  // overriding the sanitize*/assertMoveIsLegal/processTurn properly.
   playMove(move: any, player: Player): boolean {
     // Assert that the player can play a move this turn.
     let playersToPlayThisTurn: Set<Player> = this.getPlayersToPlay();
