@@ -1,6 +1,6 @@
 {
   "name": "ts-turnbased",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "description": "Abstract class for turned based board games written in TypeScript.",
   "main": "index.js",
   "typings": "index.ts",

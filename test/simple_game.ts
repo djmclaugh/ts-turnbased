@@ -1,4 +1,4 @@
-import { Game, Player } from "../game";
+import { Game, Player, Update } from "../game";
 import { IllegalMoveError, InvalidMoveError, InvalidOptionsError } from "../errors";
 
 // Implementation of a simple game that uses all of the features that the Game abstract class
@@ -25,7 +25,7 @@ export interface SimpleMove {
   gamble?: boolean; // Defaults to false
 };
 
-export interface SimpleTurnEvents {
+export interface SimplePublicUpdate {
   // calls[i] contain the i-th player's move.
   // calls[i] will be null if the i-th player didn't play that turn.
   // calls will be null before the first turn.
@@ -33,33 +33,18 @@ export interface SimpleTurnEvents {
   // publicRolls[i] contains what the i-th player rolled publicly.
   // publicRolls will be null if no dice were rolled (i.e. when a player wins).
   publicRolls: Array<number>;
-  // privateRolls[i] contains what the i-th player rolled privately.
-  // privateRolls[i] will be -1 if that roll is unkown.
-  // privateRolls will be null if no dice were rolled (i.e. when a player wins)
-  privateRolls: Array<number>;
   // lastPrivateRolls[i] contains what the i-th player rolled privately the turn before.
   // Might be different than privateRolls from the turn before since now those public rolls are all
   // public.
   // lastPrivateRolls will be null if this is the first turn.
   lastPrivateRolls: Array<number>;
-};
-
-function nullOrSlice(array: Array<any>): Array<any> {
-  return array ? array.slice() : null;
 }
 
-function copyEvents(events: SimpleTurnEvents): SimpleTurnEvents {
-  return {
-    calls: nullOrSlice(events.calls),
-    publicRolls: nullOrSlice(events.publicRolls),
-    privateRolls: nullOrSlice(events.privateRolls),
-    lastPrivateRolls: nullOrSlice(events.lastPrivateRolls)
-  };
+export interface SimplePrivateUpdate {
+  privateRoll: number;
 }
 
-export class SimpleGame extends Game<SimpleOptions, SimpleMove, SimpleTurnEvents> {
-  // History of all events.
-  private turnEvents: Array<SimpleTurnEvents>;
+export class SimpleGame extends Game {
   // Number used to generate the next dice roll.
   private rollGenerator: number;
   // Players that have rolled the highest this turn.
@@ -75,19 +60,10 @@ export class SimpleGame extends Game<SimpleOptions, SimpleMove, SimpleTurnEvents
   // The private rolls from last turn.
   private lastPrivateRolls: Array<number>;
 
-  constructor(options: any, seed: string) {
-    super(options, seed);
-    
-    // Setup the rollGenerator based on the provided seed.
-    this.rollGenerator = 0
-    for (let i = 0; i < this.seed.length; ++i) {
-      let char: number = this.seed.charCodeAt(i);
-      this.rollGenerator += char;
-    }
-    this.rollGenerator = Math.floor(this.rollGenerator) % 127;
+  constructor(options: any) {
+    super(options);
 
     // Initialize private variables.
-    this.turnEvents = [];
     this.privateRolls = [];
     this.publicRolls = [];
     this.points = [];
@@ -96,15 +72,20 @@ export class SimpleGame extends Game<SimpleOptions, SimpleMove, SimpleTurnEvents
     for (let i: number = 0; i < this.options.numPlayers; ++i) {
       this.points.push(0);
     }
+  }
 
-    // Roll first set of dice and create first events.
+  protected initialize(seed: string): Update {
+    // Setup the rollGenerator based on the provided seed.
+    this.rollGenerator = 0
+    for (let i = 0; i < seed.length; ++i) {
+      let char: number = seed.charCodeAt(i);
+      this.rollGenerator += char;
+    }
+    this.rollGenerator = this.rollGenerator % 127;
+
+    // Roll first set of dice and create first update.
     this.rollAllDice();
-    this.turnEvents.push({
-      calls: null,
-      publicRolls: this.publicRolls,
-      privateRolls: this.privateRolls,
-      lastPrivateRolls: this.lastPrivateRolls
-    });
+    return this.currentUpdate(null);
   }
 
   // numPlayers must be a number greater or equal to 1.
@@ -147,7 +128,7 @@ export class SimpleGame extends Game<SimpleOptions, SimpleMove, SimpleTurnEvents
     }
   }
 
-  protected processTurn(moves: Map<Player, SimpleMove>): void {
+  protected processTurn(moves: Map<Player, SimpleMove>): Update {
     // Remove 1 point from every player that gambled.
     // Assign 1 point to every player that made a correct guess (or 4 if they gambled).
     moves.forEach((move: SimpleMove, player: Player) => {
@@ -177,13 +158,7 @@ export class SimpleGame extends Game<SimpleOptions, SimpleMove, SimpleTurnEvents
       calls.push(call ? call : null);
     }
 
-    // Add the events for this turn.
-    this.turnEvents.push({
-      calls: calls,
-      publicRolls: this.publicRolls,
-      privateRolls: this.privateRolls,
-      lastPrivateRolls: this.lastPrivateRolls
-    });
+    return this.currentUpdate(calls);
   }
   
   // Only the high rollers can play.
@@ -201,33 +176,20 @@ export class SimpleGame extends Game<SimpleOptions, SimpleMove, SimpleTurnEvents
     return winners;
   }
 
-  getTurnEvents(): Array<SimpleTurnEvents> {
-    return this.turnEvents.map(events => copyEvents(events));
-  }
-
-  getTurnEventsAsSeenBy(player: Player): Array<SimpleTurnEvents> {
-    return this.turnEvents.map(events => {
-        let copy: SimpleTurnEvents = copyEvents(events);
-        copy.privateRolls = this.privateRollsAsSeenByPlayer(copy.privateRolls, player);
-        return copy;
-    });
-  }
-
-  getLatestTurnEvents(): SimpleTurnEvents {
-    return copyEvents(this.turnEvents[this.turnEvents.length - 1]);
-  }
-
-  getLatestTurnEventsAsSeenBy(player: Player): SimpleTurnEvents {
-    let copy: SimpleTurnEvents = copyEvents(this.turnEvents[this.turnEvents.length - 1]);
-    copy.privateRolls = this.privateRollsAsSeenByPlayer(copy.privateRolls, player);
-    return copy;
-  }
-
-  // Utility method to hide rolls the specified player is not allowed to see.
-  // Correctly handles -1 and other "invalid" players as a spectator that can't see any private
-  // roll.
-  private privateRollsAsSeenByPlayer(rolls: Array<number>, player: Player) {
-    return rolls.map((roll: number, index: number) => index == player ? roll : -1);
+  private currentUpdate(calls: Array<SimpleMove>): Update {
+    let wrapper: (number) => SimplePrivateUpdate = (roll: number) => {
+      return {privateRoll: roll};
+    };
+    let privateInfo: Array<SimplePrivateUpdate> =
+        this.privateRolls ? this.privateRolls.map(wrapper) : null;
+    return {
+      publicInfo: {
+        calls: calls,
+        publicRolls: this.publicRolls,
+        lastPrivateRolls: this.lastPrivateRolls
+      },
+      privateInfo: privateInfo
+    }
   }
 
   private rollAllDice(): void {

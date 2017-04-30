@@ -11,7 +11,7 @@ import { InvalidMoveError, IllegalMoveError } from "../errors"
 // 3 | 4 | 5
 // ---------
 // 6 | 7 | 8
-export class Tictactoe extends AbstractStrategyGame<any, number> {
+export class Tictactoe extends AbstractStrategyGame {
   // Board patterns are stored as 9-bit numbers where the i-th bit indicates if the i-th cell is
   // taken or not.
 

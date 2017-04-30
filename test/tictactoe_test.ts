@@ -1,4 +1,4 @@
-import { GenericGame } from "../game";
+import { Game, Update } from "../game";
 import { Tictactoe } from "./tictactoe";
 
 import { assert } from "chai";
@@ -6,8 +6,9 @@ import { assert } from "chai";
 describe("Tictactoe", () => {
   // Sanity test. Makes sure that the expected use case works from start to end.
   it("should be able to play a full game", () => {
-    let game: GenericGame = new Tictactoe();
-
+    let game: Game = new Tictactoe();
+    
+    game.start();
     game.playMove(0, 0);
     game.playMove(1, 1);
     game.playMove(2, 0);
@@ -20,25 +21,28 @@ describe("Tictactoe", () => {
     assert.equal(winners.size, 1);
     assert.isTrue(winners.has(0));
     assert.equal(game.getPlayersToPlay().size, 0);
-    assert.deepEqual(game.getTurnEvents(), [null, 0, 1, 2, 3, 4, 5, 6]);
-    assert.deepEqual(game.getTurnEventsAsSeenBy(-1), [null, 0, 1, 2, 3, 4, 5, 6]);
-    assert.deepEqual(game.getTurnEventsAsSeenBy(0), [null, 0, 1, 2, 3, 4, 5, 6]);
+    let moves: Array<number> =
+        game.getAllUpdates().map((update: Update) => update ? update.publicInfo : null);
+    assert.deepEqual(moves, [null, 0, 1, 2, 3, 4, 5, 6]);
   });
 
   it("should throw an error if some player plays out of turn", () => {
-    let game: GenericGame = new Tictactoe();
+    let game: Game = new Tictactoe();
+    game.start();
     game.playMove(0, 0);
     game.playMove(1, 1);
     assert.throws(() => game.playMove(2, 1));
   });
 
   it("should throw an error if the move is invalid", () => {
-    let game: GenericGame = new Tictactoe();
+    let game: Game = new Tictactoe();
+    game.start();
     assert.throws(() => game.playMove(-1, 0));
   });
 
   it("should throw an error if the move is illegal", () => {
-    let game: GenericGame = new Tictactoe();
+    let game: Game = new Tictactoe();
+    game.start();
     game.playMove(0, 0)
     assert.throws(() => game.playMove(0, 1));
   });
