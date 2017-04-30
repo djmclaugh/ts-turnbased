@@ -43,7 +43,7 @@ export abstract class Game {
 
   // Process input from the specified player.
   // Returns false if the game is still waiting for other turns before being able to progress,
-  // returns true if the game progressed .
+  // returns true if the game progressed.
   playMove(move: any, player: Player): boolean {
     // Assert that the player can play a move this turn.
     if (this.updates.length == 0) {
