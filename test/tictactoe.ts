@@ -44,7 +44,7 @@ export class Tictactoe extends AbstractStrategyGame {
 
   // Moves must be numbers from 0 to 8.
   // Numbers that are not whole numbers will be accepted anyway for simplicity's sake (but they will
-  // be floored). 
+  // be floored).
   protected sanitizeMove(move: any): number {
     if (typeof move != "number" || move < 0 || move >= 9) {
       throw new InvalidMoveError(move, "Move must be a number from 0 to 8");
@@ -61,7 +61,7 @@ export class Tictactoe extends AbstractStrategyGame {
   }
 
   // Add the appropriate bit to the appropriate pattern.
-  protected processMove(move: number): void {
+  protected updateStateWithMove(move: number): void {
     let boardWithMove: number = Math.pow(2, move);
     if (this.moves.length % 2 == 0) {
       this.xBoard |= boardWithMove;

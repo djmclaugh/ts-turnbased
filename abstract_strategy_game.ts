@@ -1,4 +1,5 @@
 import { Game, Player, Update } from "./game";
+import { AlternatingTurnsGame } from "./alternating_turns_game";
 
 // Possible status of an abstract strategy game.
 export enum Status {
@@ -12,7 +13,7 @@ export enum Status {
 // games (from now on refered to as ASGs), simplifying even further the implementation of such
 // games.
 // https://en.wikipedia.org/wiki/Abstract_strategy_game
-export abstract class AbstractStrategyGame extends Game {
+export abstract class AbstractStrategyGame extends AlternatingTurnsGame {
   // Moves are everything in ASGs. They fully determine the game state.
   // Keep track of all moves played to be able to implement the "getTurnEvents" methods.
   protected moves: Array<any> = [];
@@ -23,18 +24,17 @@ export abstract class AbstractStrategyGame extends Game {
   // protected abstract assertMoveIsLegal(move: any, player: Player): void;
 
   // ASGs have perfect information and are deterministic. The starting position will always be the
-  // same and can be inferred by the options. 
+  // same and can be inferred by the options.
   protected initialize(seed: string): Update {
     return null;
   }
 
   // Since ASGs are always alternating turns, we can partially implment processTurn and let the
   // subclass specify how to handle an individual move instead of a map of moves.
-  protected abstract processMove(move: any): void;
+  protected abstract updateStateWithMove(move: any): void;
 
-  protected processTurn(moves: Map<Player, any>): Update {
-    let move = moves.get(this.moves.length % 2);
-    this.processMove(move);
+  protected processMove(move: any): Update {
+    this.updateStateWithMove(move);
     this.moves.push(move);
     return {publicInfo: move};
   }
@@ -45,11 +45,11 @@ export abstract class AbstractStrategyGame extends Game {
   // determine in which of the 4 states the game is currently in.
   protected abstract getStatus(): Status;
 
-  getPlayersToPlay(): Set<Player> {
+  getPlayerToPlay(): Player {
     if (this.getStatus() == Status.IN_PROGRESS) {
-      return new Set<Player>([this.moves.length % 2]);
+      return this.moves.length % 2;
     }
-    return new Set<Player>();
+    return -1;
   }
 
   getWinners(): Set<Player> {
