@@ -11,7 +11,7 @@ import { InvalidMoveError, IllegalMoveError } from "../errors"
 // 3 | 4 | 5
 // ---------
 // 6 | 7 | 8
-export class Tictactoe extends AbstractStrategyGame {
+export class Tictactoe extends AbstractStrategyGame<null, number> {
   // Board patterns are stored as 9-bit numbers where the i-th bit indicates if the i-th cell is
   // taken or not.
 
@@ -38,7 +38,7 @@ export class Tictactoe extends AbstractStrategyGame {
   }
 
   // No options needed, always return null.
-  protected sanitizeOptions(options: any): any {
+  protected sanitizeOptions(options: any): null {
     return null;
   }
 
@@ -61,7 +61,7 @@ export class Tictactoe extends AbstractStrategyGame {
   }
 
   // Add the appropriate bit to the appropriate pattern.
-  protected updateStateWithMove(move: number): void {
+  protected processMove(move: number): void {
     let boardWithMove: number = Math.pow(2, move);
     if (this.moves.length % 2 == 0) {
       this.xBoard |= boardWithMove;

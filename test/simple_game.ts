@@ -11,7 +11,7 @@ import { IllegalMoveError, InvalidMoveError, InvalidOptionsError } from "../erro
 //   of the hidden dice of the high rollers.
 // - If the private roll matches the public roll, the player can call a "gamble" for the cost of one
 //   point.
-// - Each player that guesses correctly wins a point (or 4 points if the player made a "gamble" 
+// - Each player that guesses correctly wins a point (or 4 points if the player made a "gamble"
 //   call).
 // - First players to numPoints win the game (there can be multiple winners).
 
@@ -44,11 +44,11 @@ export interface SimplePrivateUpdate {
   privateRoll: number;
 }
 
-export class SimpleGame extends Game {
+export class SimpleGame extends Game<SimpleOptions, SimpleMove, SimplePublicUpdate, SimplePrivateUpdate> {
   // Number used to generate the next dice roll.
   private rollGenerator: number;
   // Players that have rolled the highest this turn.
-  private highRollers: Set<Player>;
+  private highRollers: Array<Player>;
   // The parity of the sum of the private rolls of the highRollers.
   private highRollsParity: "odd"|"even";
   // The number points each player has.
@@ -60,7 +60,7 @@ export class SimpleGame extends Game {
   // The private rolls from last turn.
   private lastPrivateRolls: Array<number>;
 
-  constructor(options: any) {
+  constructor(options: SimpleOptions) {
     super(options);
 
     // Initialize private variables.
@@ -68,13 +68,13 @@ export class SimpleGame extends Game {
     this.publicRolls = [];
     this.points = [];
     this.lastPrivateRolls = null;
-    this.highRollers = new Set<Player>();
+    this.highRollers = [];
     for (let i: number = 0; i < this.options.numPlayers; ++i) {
       this.points.push(0);
     }
   }
 
-  protected initialize(seed: string): Update {
+  protected initialize(seed: string): Update<SimplePublicUpdate, SimplePrivateUpdate> {
     // Setup the rollGenerator based on the provided seed.
     this.rollGenerator = 0
     for (let i = 0; i < seed.length; ++i) {
@@ -91,10 +91,10 @@ export class SimpleGame extends Game {
   // numPlayers must be a number greater or equal to 1.
   // numPlayers will be floored.
   // numPoints must be a number greater or equal to 1.
-  // If numPoints is null or invalid, it will default to 10 instead of throwing an error. 
+  // If numPoints is null or invalid, it will default to 10 instead of throwing an error.
   protected sanitizeOptions(options: any): SimpleOptions {
     if (typeof options.numPlayers != "number") {
-      throw new InvalidOptionsError(options, "options must specify the number of players");  
+      throw new InvalidOptionsError(options, "options must specify the number of players");
     } else if (options.numPlayers < 1) {
       throw new InvalidOptionsError(options, "number of players must be at least 1");
     }
@@ -104,6 +104,10 @@ export class SimpleGame extends Game {
           ? options.numPoints
           : 10
     };
+  }
+
+  protected numberOfPlayersForOptions(options: SimpleOptions) {
+    return options.numPlayers;
   }
 
   // A move must contain an even/odd guess.
@@ -128,7 +132,7 @@ export class SimpleGame extends Game {
     }
   }
 
-  protected processTurn(moves: Map<Player, SimpleMove>): Update {
+  protected processTurn(moves: Map<Player, SimpleMove>): Update<SimplePublicUpdate, SimplePrivateUpdate> {
     // Remove 1 point from every player that gambled.
     // Assign 1 point to every player that made a correct guess (or 4 if they gambled).
     moves.forEach((move: SimpleMove, player: Player) => {
@@ -141,14 +145,14 @@ export class SimpleGame extends Game {
     });
 
     this.lastPrivateRolls = this.privateRolls.slice();
-    if (this.getWinners().size == 0) {
+    if (this.getWinners().length == 0) {
       // If no one won yet, roll another set of dice.
       this.rollAllDice();
     } else {
       // Otherwise, set the dice rolls to null to indicate that they have not been rolled.
       this.publicRolls = null;
       this.privateRolls = null;
-      this.highRollers.clear();
+      this.highRollers = [];
     }
 
     // Transform the map of moves into an array of moves.
@@ -160,23 +164,18 @@ export class SimpleGame extends Game {
 
     return this.currentUpdate(calls);
   }
-  
-  // Only the high rollers can play.
-  getPlayersToPlay(): Set<Player> {
-    return new Set<Player>(this.highRollers);
-  }
 
-  getWinners(): Set<Player> {
-    let winners: Set<Player> = new Set<Player>();
+  protected getWinners(): Array<Player> {
+    let winners: Array<Player> = [];
     this.points.forEach((value: number, index: number) => {
       if (value >= this.options.numPoints) {
-        winners.add(index);
+        winners.push(index);
       }
     });
     return winners;
   }
 
-  private currentUpdate(calls: Array<SimpleMove>): Update {
+  private currentUpdate(calls: Array<SimpleMove>): Update<SimplePublicUpdate, SimplePrivateUpdate> {
     let wrapper: (number) => SimplePrivateUpdate = (roll: number) => {
       return {privateRoll: roll};
     };
@@ -186,24 +185,25 @@ export class SimpleGame extends Game {
       publicInfo: {
         calls: calls,
         publicRolls: this.publicRolls,
-        lastPrivateRolls: this.lastPrivateRolls
+        lastPrivateRolls: this.lastPrivateRolls,
       },
+      toPlay: this.highRollers,
       privateInfo: privateInfo
-    }
+    };
   }
 
   private rollAllDice(): void {
     let highestRoll: number = 0;
-    this.highRollers.clear();
+    this.highRollers = [];
     for (let i: number = 0; i < this.options.numPlayers; ++i) {
       this.privateRolls[i] = this.getNextDiceRoll();
       this.publicRolls[i] = this.getNextDiceRoll();
       if (this.publicRolls[i] > highestRoll) {
         highestRoll = this.publicRolls[i];
-        this.highRollers.clear();
+        this.highRollers = [];
       }
       if (this.publicRolls[i] == highestRoll) {
-        this.highRollers.add(i);
+        this.highRollers.push(i);
       }
     }
     // Figure out the parity of the highroller's private rolls.

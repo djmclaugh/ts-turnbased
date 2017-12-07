@@ -10,8 +10,9 @@ describe("SimpleGame", () => {
       numPlayers: 3,
       numPoints: 5
     };
-    let events: Update;
-    let game: Game = new SimpleGame(options);
+    let events: Update<SimplePublicUpdate, SimplePrivateUpdate>;
+    let game: Game<SimpleOptions, SimpleMove, SimplePublicUpdate, SimplePrivateUpdate> =
+        new SimpleGame(options);
     game.start("test_seed");
     events = game.getLatestUpdate();
     assert.isNull(events.publicInfo.calls);
@@ -86,9 +87,9 @@ describe("SimpleGame", () => {
     assert.deepEqual(events.publicInfo.lastPrivateRolls, [3, 3, 2]);
     assert.isNull(events.privateInfo);
 
-    let winners: Set<number> = game.getWinners();
-    assert.equal(winners.size, 1);
-    assert.isTrue(winners.has(0));
+    let winners: Array<number> = game.getLatestUpdate().winners;
+    assert.equal(winners.length, 1);
+    assert.include(winners, 0);
   });
 
   it("should throw an error if the options are invalid", () => {
@@ -104,7 +105,8 @@ describe("SimpleGame", () => {
       numPlayers: 3,
       numPoints: 5
     };
-    let game: Game = new SimpleGame(options);
+    let game: Game<SimpleOptions, SimpleMove, SimplePublicUpdate, SimplePrivateUpdate> =
+        new SimpleGame(options);
     game.start("test_seed");
     assert.throws(() => game.playMove({guess: "odd"}, 1));
   });
@@ -114,7 +116,8 @@ describe("SimpleGame", () => {
       numPlayers: 3,
       numPoints: 5
     };
-    let game: Game = new SimpleGame(options);
+    let game: Game<SimpleOptions, any, SimplePublicUpdate, SimplePrivateUpdate> =
+        new SimpleGame(options);
     game.start("test_seed");
     // Make sure that it's actually player 0's turn to play.
     assert.isTrue(game.getPlayersToPlay().has(0));
@@ -126,7 +129,8 @@ describe("SimpleGame", () => {
       numPlayers: 3,
       numPoints: 5
     };
-    let game: Game = new SimpleGame(options);
+    let game: Game<SimpleOptions, SimpleMove, SimplePublicUpdate, SimplePrivateUpdate> =
+        new SimpleGame(options);
     game.start("test_seed");
     // Make sure that it's actually player 0's turn to play.
     assert.isTrue(game.getPlayersToPlay().has(0));

@@ -39,6 +39,10 @@ RockPaperScissors.prototype.sanitizeOptions = function(options) {
   return {numRounds: Math.floor(options.numRounds)};
 };
 
+RockPaperScissors.prototype.numberOfPlayersForOptions = function(options) {
+  return 2;
+};
+
 RockPaperScissors.prototype.sanitizeMove = function(move) {
   if (move != "rock" && move != "paper" && move != "scissors") {
     throw new Error("move is '" + move + "' but should be 'rock', 'paper', or 'scissors'");
@@ -54,6 +58,10 @@ RockPaperScissors.prototype.initialize = function(seed) {
   this.round = 0;
   this.p1Points = 0;
   this.p2Points = 0;
+  return {
+    publicInfo: null,
+    toPlay: [0, 1],
+  }
 };
 
 RockPaperScissors.prototype.processTurn = function(moves) {
@@ -63,30 +71,26 @@ RockPaperScissors.prototype.processTurn = function(moves) {
   this.p2Points += winGrid[p2Move][p1Move];
   this.round += 1;
   return {
-    p1Move: p1Move,
-    p2Move: p2Move
+    publicInfo: {
+      p1Move: p1Move,
+      p2Move: p2Move
+    },
+    toPlay: this.round == this.options.numRounds ? [] : [0, 1]
   }
-};
-
-RockPaperScissors.prototype.getPlayersToPlay = function() {
-  if (this.round == this.options.numRounds) {
-    return new Set();
-  }
-  return new Set([0, 1]);
 };
 
 RockPaperScissors.prototype.getWinners = function() {
   if (this.round == this.options.numRounds) {
-    var winners = new Set();
+    var winners = [];
     if (this.p1Points >= this.p2Points) {
-      winners.add(0);
+      winners.push(0);
     }
     if (this.p2Points >= this.p1Points) {
-      winners.add(1);
+      winners.push(1);
     }
     return winners;
   }
-  return new Set();
+  return [];
 };
 
 //////////////////////////////
@@ -112,11 +116,8 @@ gameInstance.playMove("scissors", 1);
 
 gameInstance.playMove("rock", 0);
 gameInstance.playMove("scissors", 1);
-var winners = [];
-for (var winner of gameInstance.getWinners()) {
-  winners.push(winner);
-}
-console.log("Winner: " + winners); // Winner: 0
+
+console.log("Winner: " + gameInstance.getWinners()); // Winner: 0
 
 // Throws an error if invalid options
 try {
